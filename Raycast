@@ -1,0 +1,16 @@
+float raycastLength = 100.0;
+Vector3 raycastDirection = Vector3(0.0, 0.0, -1.0);
+
+// Raycast from the player's position in the direction of gravity (down)
+RaycastResult raycastResult = Game.GetPlayer().GetPosition().Raycast(raycastDirection, raycastLength);
+
+// Check if the raycast hit anything
+if (raycastResult.DidHit())
+{
+    // Check if the player is in the air (i.e., the raycast hit something below the player)
+    if (raycastResult.HitPosition.z > Game.GetPlayer().GetPosition().z)
+    {
+        // Keep the player suspended in mid-air by setting their velocity to 0
+        Game.GetPlayer().SetVelocity(Vector3(0.0, 0.0, 0.0));
+    }
+}
