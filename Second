@@ -1,0 +1,64 @@
+#include "SKSE/API.h"
+#include "SKSE/PapyrusVM.h"
+#include "SKSE/PapyrusNativeFunctions.h"
+
+#include "common/IDirect3DDevice9.h"
+
+bool g_bFreezePlayer = false;
+
+void FreezePlayer()
+{
+	PlayerCharacter* pPlayer = (*g_thePlayer);
+	pPlayer->SetVelocity(0, 0, 0);
+	pPlayer->SetPosition(pPlayer->GetPosition().x, pPlayer->GetPosition().y, pPlayer->GetPosition().z);
+	pPlayer->SetAngle(0, 0, 0);
+}
+
+void UnfreezePlayer()
+{
+	PlayerCharacter* pPlayer = (*g_thePlayer);
+	pPlayer->SetVelocity(0, 0, 0);
+	pPlayer->SetAngle(0, 0, 0);
+}
+
+void ProcessInput()
+{
+	if (GetAsyncKeyState(VK_F5) & 1)
+	{
+		if (!g_bFreezePlayer)
+		{
+			g_bFreezePlayer = true;
+			FreezePlayer();
+		}
+		else
+		{
+			g_bFreezePlayer = false;
+			UnfreezePlayer();
+		}
+	}
+}
+
+void Hook_Render()
+{
+	ProcessInput();
+}
+
+extern "C"
+{
+	bool SKSEPlugin_Query(const SKSEInterface* a_skse, PluginInfo* a_info)
+	{
+		a_info->infoVersion = PluginInfo::kInfoVersion;
+		a_info->name = "FreezePlayer";
+		a_info->version = 1;
+		return true;
+	}
+
+	bool SKSEPlugin_Load(const SKSEInterface* a_skse)
+	{
+		g_pDevice = (IDirect3DDevice9*)a_skse->GetHookInterface()->GetDirect3DDevice();
+		g_pDevice->CreateRenderer(Renderer::GetRendererInfo());
+		g_pRenderer = (Renderer*)g_pDevice->GetRenderer();
+		g_pRenderer->AddHook_Render(Hook_Render);
+		return true;
+	}
+};
