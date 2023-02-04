@@ -1,0 +1,64 @@
+#include "SKSE/API.h"
+#include "SKSE/PapyrusVM.h"
+#include "SKSE/PapyrusNativeFunctions.h"
+#include "common/IDirect3DDevice9.h"
+#include "fmod.hpp"
+
+bool g_bFreezePlayer = false;
+FMOD::System* g_fmodSystem;
+FMOD::Sound* g_fmodSound;
+
+void FreezePlayer()
+{
+	PlayerCharacter* pPlayer = (*g_thePlayer);
+	pPlayer->SetVelocity(0, 0, 0);
+	pPlayer->SetPosition(pPlayer->GetPosition().x, pPlayer->GetPosition().y, pPlayer->GetPosition().z);
+	pPlayer->SetAngle(0, 0, 0);
+
+	// Play sound
+	g_fmodSystem->playSound(g_fmodSound, 0, false, 0);
+
+	// Add visual effect
+	// ...
+}
+
+void UnfreezePlayer()
+{
+	PlayerCharacter* pPlayer = (*g_thePlayer);
+	pPlayer->SetVelocity(0, 0, 0);
+	pPlayer->SetAngle(0, 0, 0);
+}
+
+void ProcessInput()
+{
+	if (GetAsyncKeyState('X') & 1)
+	{
+		if (!g_bFreezePlayer)
+		{
+			g_bFreezePlayer = true;
+			FreezePlayer();
+		}
+		else
+		{
+			g_bFreezePlayer = false;
+			UnfreezePlayer();
+		}
+	}
+	
+	if (g_bFreezePlayer)
+	{
+		PlayerCharacter* pPlayer = (*g_thePlayer);
+		if (pPlayer->GetActorValue(kActorVal_Health) != pPlayer->GetActorValue(kActorVal_HealthMax))
+		{
+			g_bFreezePlayer = false;
+			UnfreezePlayer();
+		}
+	}
+}
+
+void Hook_Render()
+{
+	ProcessInput();
+}
+
+extern "
