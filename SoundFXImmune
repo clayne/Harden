@@ -1,0 +1,76 @@
+#include "SKSE/SKSE.h"
+#include "SKSE/SKSE_API.h"
+#include "SKSE/SKSE_Macros.h"
+#include "SKSE/PapyrusVM.h"
+#include "SKSE/PapyrusNativeFunctions.h"
+#include "SKSE/PapyrusEvents.h"
+#include "SKSE/GameForms.h"
+#include "SKSE/GameEvents.h"
+#include "SKSE/GameRTTI.h"
+#include "SKSE/GameData.h"
+#include "SKSE/GameReferences.h"
+#include "SKSE/GameMenus.h"
+#include "SKSE/GameRTTI.h"
+#include "SKSE/GameObjects.h"
+#include "SKSE/GameSettings.h"
+#include "SKSE/GameExtraData.h"
+#include "SKSE/GameMenus.h"
+
+#include <chrono>
+#include <thread>
+
+class XHotkeyHandler : public BSTEventSink<BSInputEvent>
+{
+public:
+	virtual EventResult ReceiveEvent(BSInputEvent* evn, InputEvent* inputEvent)
+	{
+		if (evn && inputEvent)
+		{
+			if (inputEvent->deviceType == InputDeviceType::kDeviceType_Keyboard)
+			{
+				InputKeyEvent* keyEvent = (InputKeyEvent*)inputEvent;
+				if (keyEvent->keyCode == VK_X && keyEvent->isDown)
+				{
+					PlaySound();
+					PlayVisualEffect();
+					MakePlayerInvulnerable();
+				}
+			}
+		}
+		return kEvent_Continue;
+	}
+
+private:
+	void PlaySound()
+	{
+		// Code to play a sound effect goes here
+	}
+
+	void PlayVisualEffect()
+	{
+		// Code to play a visual effect goes here
+	}
+
+	void MakePlayerInvulnerable()
+	{
+		PlayerCharacter* player = (*g_thePlayer);
+		if (player)
+		{
+			player->actorValueOwner.SetActorValue(ActorValue::kActorVal_Invulnerable, 1.0f);
+			std::thread([&]() {
+				std::this_thread::sleep_for(std::chrono::seconds(1));
+				player->actorValueOwner.SetActorValue(ActorValue::kActorVal_Invulnerable, 0.0f);
+			}).detach();
+		}
+	}
+};
+
+static XHotkeyHandler g_xHotkeyHandler;
+
+void RegisterXHotkeyHandler()
+{
+	BSInputEventDispatcher* eventDispatcher = BSInputEventDispatcher::GetSingleton();
+	if (eventDispatcher)
+	{
+		eventDispatcher->AddEventSink(&g_xHotkeyHandler);
+	}
