@@ -1,0 +1,53 @@
+#include "SKSE/API.h"
+#include "SKSE/Trampoline.h"
+#include "SKSE/SafeWrite.h"
+#include "SKSE/Interfaces.h"
+#include "SKSE/PapyrusEvents.h"
+#include "SKSE/PapyrusNativeFunctions.h"
+#include "SKSE/PapyrusObjects.h"
+#include "SKSE/PapyrusVM.h"
+#include "SKSE/GameData.h"
+#include "SKSE/GameObjects.h"
+#include "SKSE/GameForms.h"
+#include "SKSE/GameRTTI.h"
+#include "SKSE/GameEvents.h"
+#include "SKSE/GameSettings.h"
+
+class SKSEHotkeyExample : public SKSEEventHandler
+{
+public:
+  virtual void OnKeyboardEvent(bool keyDown, UInt32 keycode) override
+  {
+    if (!keyDown) return;
+    if (keycode == GetKeycodeByControl("X"))
+    {
+      // Play the sound
+      TESForm * form = TESForm::LookupByID(0x0005ADA3);
+      TESSound * sound = (TESSound *)form;
+      if (sound)
+      {
+        TESQuest * quest = (*g_thePlayer)->parentCell->GetCurrentQuest();
+        g_audioManager->PlaySound(sound, 0, quest, false, 0, 0, 0);
+      }
+      
+      // Show the visual effect
+      TESForm * form = TESForm::LookupByID(0x0006E1B3);
+      EffectSetting * effect = (EffectSetting *)form;
+      if (effect)
+      {
+        TESObjectREFR * reference = (*g_thePlayer);
+        BGSReferenceEffect * referenceEffect = new BGSReferenceEffect();
+        referenceEffect->Set(effect, reference, reference, 1, 1);
+        g_gameEventDispatcher->AddEventSink(referenceEffect);
+      }
+    }
+  }
+};
+
+SKSEHotkeyExample g_hotkeyExample;
+
+bool SKSEHotkeyExample_Initialize(SKSEInterface * skse)
+{
+  g_hotkeyExample.Register();
+  return true;
+}
