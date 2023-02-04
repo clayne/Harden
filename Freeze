@@ -1,0 +1,50 @@
+; Variables to store the player's position, pitch, yaw, and roll when frozen
+float freezeX
+float freezeY
+float freezeZ
+float freezePitch
+float freezeYaw
+float freezeRoll
+
+; Freeze/unfreeze function
+Function SetSuspended(bool isSuspended)
+{
+    if (isSuspended)
+    {
+        ; Store the player's current position, pitch, yaw, and roll
+        freezeX = GetPlayerPos().x
+        freezeY = GetPlayerPos().y
+        freezeZ = GetPlayerPos().z
+        freezePitch = GetPlayerPitch()
+        freezeYaw = GetPlayerYaw()
+        freezeRoll = GetPlayerRoll()
+
+        ; Freeze the player by setting their movement speed to 0
+        CallFunction("SetMovementSpeedMult", 0)
+    }
+    else
+    {
+        ; Unfreeze the player by setting their movement speed back to normal
+        CallFunction("SetMovementSpeedMult", 1)
+
+        ; Set the player's position, pitch, yaw, and roll back to their stored values
+        SetPlayerPos(freezeX, freezeY, freezeZ)
+        SetPlayerPitch(freezePitch)
+        SetPlayerYaw(freezeYaw)
+        SetPlayerRoll(freezeRoll)
+    }
+}
+
+; Hotkey function to toggle the freeze/unfreeze state
+Function FreezePlayer()
+{
+    ; Get the current freeze state
+    bool isSuspended = CallFunction("GetIsSuspended")
+
+    ; Toggle the freeze state
+    isSuspended = !isSuspended
+    CallFunction("SetSuspended", isSuspended)
+}
+
+; Bind the hotkey function to a specific key
+ScriptEffect.AddKeyBinding("FreezePlayer", "f")
