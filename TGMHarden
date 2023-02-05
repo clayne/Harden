@@ -1,0 +1,40 @@
+#include "SKSE/API.h"
+#include <windows.h>
+
+void ApplyImmunity()
+{
+  // Enable god mode for the player
+  Console_Print("tgm");
+
+  // Create a timer that will last for 2 seconds
+  DWORD currentTime = timeGetTime();
+  DWORD endTime = currentTime + 2000;
+
+  // Wait until the immunity spell has expired
+  while (timeGetTime() < endTime)
+  {
+    Sleep(100);
+  }
+
+  // Disable god mode for the player
+  Console_Print("tgm");
+}
+
+extern "C"
+{
+  bool SKSEPlugin_Query(const SKSEInterface *skse, PluginInfo *info)
+  {
+    info->infoVersion = PluginInfo::kInfoVersion;
+    info->name = "Immunity Spell Plugin";
+    info->version = 1;
+
+    return true;
+  }
+
+  bool SKSEPlugin_Load(const SKSEInterface *skse)
+  {
+    ApplyImmunity();
+
+    return true;
+  }
+};
