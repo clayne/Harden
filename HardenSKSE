@@ -1,0 +1,73 @@
+#include "SKSE/API.h"
+#include "SKSE/GameReferences.h"
+#include <windows.h>
+
+class ImmunitySpell : public Actor
+{
+public:
+  virtual void Callback(EffectSetting *effectSetting, Actor *target, Actor *caster, float magnitude)
+  {
+    target->SetActorValue(3, 1000000.0);
+    _MESSAGE("Immunity Spell cast on player.");
+
+    // Create a timer that will last for 2 seconds
+    DWORD currentTime = timeGetTime();
+    DWORD endTime = currentTime + 2000;
+
+    // Check if the immunity spell has expired
+    while (timeGetTime() < endTime)
+    {
+      // If the player is hit, stagger the attacker
+      if (target->GetActorValue(3) == 0.0)
+      {
+        Actor *attacker = target->GetActorBeingAttacked();
+        if (attacker)
+        {
+          attacker->Stagger(100);
+          _MESSAGE("Attacker was staggered.");
+        }
+      }
+    }
+
+    target->SetActorValue(3, 100.0);
+    _MESSAGE("Player is no longer immune.");
+  }
+};
+
+void AddImmunitySpell()
+{
+  // Create the spell
+  SpellItem *spell = (SpellItem *)Game::GetFormById(0x00023744);
+  spell->data.type = SpellType::kType_Spell;
+
+  // Attach the effect to the spell
+  EffectSetting *effect = (EffectSetting *)Game::GetFormById(0x00023744);
+  spell->AddEffect(effect);
+
+  // Register the callback function
+  ImmunitySpell *callback = new ImmunitySpell();
+  effect->SetCallback(callback);
+
+  // Add the spell to the player's inventory
+  PlayerCharacter *player = *g_thePlayer;
+  player->AddItem(spell, 1, false);
+}
+
+extern "C"
+{
+  bool SKSEPlugin_Query(const SKSEInterface *skse, PluginInfo *info)
+  {
+    info->infoVersion = PluginInfo::kInfoVersion;
+    info->name = "Immunity Spell Plugin";
+    info->version = 1;
+
+    return true;
+  }
+
+  bool SKSEPlugin_Load(const SKSEInterface *skse)
+  {
+    AddImmunitySpell();
+
+    return true;
+  }
+};
